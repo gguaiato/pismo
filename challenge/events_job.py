@@ -86,7 +86,7 @@ def process_events(input_path, output_path):
     """
     events_data = read_events_data(input_path)
     events_data = dedup_events(events_data)
-    trigger_events_processing(events_data, output_path).awaitTermination()
+    trigger_events_processing(events_data, output_path)
 
 
 if __name__ == '__main__':

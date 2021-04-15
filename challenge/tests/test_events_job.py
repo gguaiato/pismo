@@ -57,6 +57,21 @@ class EventsJobTest(PySparkTest):
         with open(output_path, 'w') as file:
             file.write(json.dumps(sample_data))
 
+
+    @staticmethod
+    def _check_folder_partition(partitions, dir_path):
+        if partitions:
+            partition = partitions[0]
+            directories = os.listdir(f'{dir_path}')
+            for partition_directory in directories:
+                if '_SUCCESS' in partition_directory:
+                    continue
+                assert partition in partition_directory
+                partition_path = f'{dir_path}/{partition_directory}'
+                EventsJobTest._check_folder_partition(
+                    partitions[1:], partition_path
+                )
+
     def test_should_dedup_events_by_timestamp(self):
         """
         Test method to validate that duplicated events are cleaned in the dataset
@@ -91,7 +106,7 @@ class EventsJobTest(PySparkTest):
                 f'event_id == \'{event["event_id"]}\' and timestamp == \'{event["timestamp"]}\''
             ).count() == 1
 
-    def test_should_write_events_file(self):
+    def test_should_write_events_file_with_directories(self):
         """
         Test method to validate that the parquet events file is being
         written accordingly
@@ -105,10 +120,10 @@ class EventsJobTest(PySparkTest):
 
             assert output_events_df.select(*events_df.columns).exceptAll(events_df).count() == 0
 
-            output_directories = os.listdir(events_output_path)
-            for domain in ['domain=account', 'domain=transaction']:
-                assert domain in output_directories
-                for directory in os.listdir(f'{events_output_path}/{domain}'):
-                    assert 'event_type=' in directory or '_SUCCESS' in directory
+            EventsJobTest._check_folder_partition(
+                ['domain=', 'event_type=', 'year=', 'month=', 'day='],
+                events_output_path
+            )
+
         finally:
             shutil.rmtree(events_output_path)

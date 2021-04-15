@@ -3,7 +3,6 @@ export PYTHONPATH=$(PWD)/challenge
 SAMPLES_DIR=../sample-data
 HDFS_INPUT_EVENTS_FOLDER=hdfs://localhost/input-events
 HDFS_OUTPUT_EVENTS_FOLDER=hdfs://localhost/output-events
-HDFS_CHECKPOINT_EVENTS_FOLDER=hdfs://localhost/checkpoint-events
 
 .PHONY: help
 help: ## Shows help menu
@@ -23,14 +22,12 @@ test: flake
 
 .PHONY: clear-output-data
 clear-output-data: ## Clears the output data
-	@hdfs dfs -rm -r -f ${HDFS_CHECKPOINT_EVENTS_FOLDER}
 	@hdfs dfs -rm -r -f ${HDFS_OUTPUT_EVENTS_FOLDER}
 
 .PHONY: clear-all
 clear-all: ## Clears the all data in hdfs
 	@hdfs dfs -rm -r -f ${HDFS_INPUT_EVENTS_FOLDER}
 	@hdfs dfs -rm -r -f ${HDFS_OUTPUT_EVENTS_FOLDER}
-	@hdfs dfs -rm -r -f ${HDFS_CHECKPOINT_EVENTS_FOLDER}
 
 .PHONY: reload-data
 reload-data: clear-all ## Reloads data to hdfs
@@ -40,4 +37,6 @@ reload-data: clear-all ## Reloads data to hdfs
 load-new-data: ## Loads new data to hdfs
 	$(MAKE) -C sample_data_generator load-sample-data-to-hdfs
 
-
+.PHONY: run-local-with-sample
+run-local-with-sample: reload-data ## Runs with sample data
+	spark-submit challenge/events_job.py ${HDFS_INPUT_EVENTS_FOLDER} ${HDFS_OUTPUT_EVENTS_FOLDER}
