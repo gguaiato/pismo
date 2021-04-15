@@ -19,7 +19,6 @@ flake: clean
 test: flake
 	@pytest -vv -rxs challenge/tests
 
-
 .PHONY: clear-output-data
 clear-output-data: ## Clears the output data
 	@hdfs dfs -rm -r -f ${HDFS_OUTPUT_EVENTS_FOLDER}
